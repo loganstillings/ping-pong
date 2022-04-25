@@ -1,46 +1,139 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Ping Pong Game</title>
-</head>
-<body>
-	<canvas id="canvas" width="800" height="400"></canvas>
-	<script type="text/javascript" src="js/app.js"></script>
-	<script type="text/javascript">
-		//Sample functions, remove these functions and design ping-pong game with onInit and onUpdate.
+    <head>
+        <title>Ping Pong Game</title>
+    </head>
+    <body>
+        <canvas
+            id="canvas"
+            width="800"
+            height="400"
+            style="border: 1px solid black"
+        ></canvas>
+        <script type="text/javascript" src="js/app.js"></script>
+        <script type="text/javascript">
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            const HEIGHT = canvas.height;
+            const WIDTH = canvas.width;
+            const PADDLE_WIDTH = 200;
+            const PADDLE_HEIGHT = 20;
+            const PADDLE_SPEED = 5;
+            // Both players paddles start in the middle horizontally
+            const PADDLE_START_X =
+                Math.floor(WIDTH / 2) - Math.floor(PADDLE_WIDTH / 2);
 
-		app.onInit = function(){
-			this.nodes.push({
-				id : 'red-box',
-				x  : 100,
-				y  : 0,
-				width  : 100,
-				height : 100,
-				color  : 'red',
-				direction : 0
-			});
+            var player1 = {};
+            var player2 = {};
 
-			this.nodes.push({
-				id : 'black-box',
-				x  : 50,
-				y  : 0,
-				width  : 150,
-				height : 150,
-				color  : 'black'
-			});
-		};
+            document.onkeydown = function (event) {
+                if (event.keyCode === 68)
+                    //d
+                    player1.pressingRight = true;
+                else if (event.keyCode === 83)
+                    //s
+                    player1.pressingDown = true;
+                else if (event.keyCode === 65)
+                    //a
+                    player1.pressingLeft = true;
+                else if (event.keyCode === 87)
+                    // w
+                    player1.pressingUp = true;
+                else if (event.keyCode === 39) {
+                    // right
+                    player2.pressingRight = true;
+                } else if (event.keyCode === 40)
+                    //down
+                    player2.pressingDown = true;
+                else if (event.keyCode === 37)
+                    //left
+                    player2.pressingLeft = true;
+                else if (event.keyCode === 38)
+                    //up
+                    player2.pressingUp = true;
+                else if (event.keyCode === 32)
+                    // spacebar
+                    paused = !paused;
+            };
 
-		app.onUpdate = function(time){
-			this.getNode('black-box').y++;
+            document.onkeyup = function (event) {
+                if (event.keyCode === 68)
+                    //d
+                    player1.pressingRight = false;
+                else if (event.keyCode === 83)
+                    //s
+                    player1.pressingDown = false;
+                else if (event.keyCode === 65)
+                    //a
+                    player1.pressingLeft = false;
+                else if (event.keyCode === 87)
+                    // w
+                    player1.pressingUp = false;
+                else if (event.keyCode === 39)
+                    //right
+                    player2.pressingRight = false;
+                else if (event.keyCode === 40)
+                    //down
+                    player2.pressingDown = false;
+                else if (event.keyCode === 37)
+                    //left
+                    player2.pressingLeft = false;
+                else if (event.keyCode === 38)
+                    //up
+                    player2.pressingUp = false;
+            };
 
-			if(Math.cos(this.timestamp / 100) > 0){
-				this.getNode('red-box').direction = -1;
-			}else{
-				this.getNode('red-box').direction = 1;
-			}
+            function Node(id, x, y, width, height, color, direction) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.color = color;
+                this.direction = direction;
+            }
 
-			this.getNode('red-box').x+=this.getNode('red-box').direction;
-		};
-	</script>
-</body>
+            app.onInit = function () {
+                this.nodes.push(
+                    new Node(
+                        "red-box",
+                        PADDLE_START_X,
+                        0,
+                        PADDLE_WIDTH,
+                        PADDLE_HEIGHT,
+                        "red",
+                        0
+                    )
+                );
+                this.nodes.push(
+                    new Node(
+                        "blue-box",
+                        PADDLE_START_X,
+                        HEIGHT - PADDLE_HEIGHT,
+                        PADDLE_WIDTH,
+                        PADDLE_HEIGHT,
+                        "blue",
+                        0
+                    )
+                );
+            };
+
+            app.onUpdate = function (time) {
+                var redbox = this.getNode("red-box");
+                var bluebox = this.getNode("blue-box");
+
+                if (player1.pressingRight && redbox.x < WIDTH - PADDLE_WIDTH) {
+                    redbox.x += PADDLE_SPEED;
+                } else if (player1.pressingLeft && redbox.x > 0) {
+                    redbox.x -= PADDLE_SPEED;
+                }
+
+                if (player2.pressingRight && bluebox.x < WIDTH - PADDLE_WIDTH) {
+                    bluebox.x += PADDLE_SPEED;
+                } else if (player2.pressingLeft && bluebox.x > 0) {
+                    bluebox.x -= PADDLE_SPEED;
+                }
+            };
+        </script>
+    </body>
 </html>
