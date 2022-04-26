@@ -14,6 +14,7 @@ function Player(id, x, y, color) {
     self.isPressingRight = false;
     self.isPressingDown = false;
     self.isPressingUp = false;
+
     self.update = () => {
         if (self.isPressingRight && self.x < WIDTH - PADDLE_WIDTH) {
             self.x += PADDLE_SPEED;
@@ -21,12 +22,25 @@ function Player(id, x, y, color) {
             self.x -= PADDLE_SPEED;
         }
     };
+
+    self.reset = () => {
+        self.x = x;
+        self.y = y;
+    };
+
     return self;
 }
 function Ball(id, x, y, color) {
     var self = new Node(id, x, y, BALL_WIDTH, BALL_HEIGHT, color);
-    self.speedX = 0;
-    self.speedY = 1;
+
+    self.initialize = () => {
+        self.speedX = 1;
+        self.speedY = 1;
+        self.x = x;
+        self.y = y;
+    };
+
+    self.initialize();
 
     self.update = (player1, player2) => {
         self.x += self.speedX;
@@ -37,19 +51,28 @@ function Ball(id, x, y, color) {
         }
 
         if (self.isCollidingWithPaddle(player1, player2)) {
-            console.log("collision");
             self.speedY *= -1;
-            self.speedY += self.speedY < 0 ? -0.5 : 0.5;
-            // self.speedX += self.speedX < 0 ? -0.5 : 0.5;
+            if (self.speedY > -15 && self.speedY < 15) {
+                // capping the vertical speed at 15 so it doesn't skip the paddle
+                self.speedY += self.speedY < 0 ? -0.5 : 0.5;
+            }
+            self.speedX += self.speedX < 0 ? -0.5 : 0.5;
         }
 
         if (self.isScored()) {
             self.speedX = 0;
             self.speedY = 0;
             paused = true;
-            console.log(self.y);
-            var score = `Score: player1(red) - ${player1.points}, player2(blue) - ${player2.points}`;
+            if (self.y <= 0) {
+                player2.points++;
+            } else {
+                player1.points++;
+            }
+            var score = `Score: Red - ${player1.points}, Blue - ${player2.points}`;
             console.log(score);
+            self.initialize();
+            player1.reset();
+            player2.reset();
         }
         return paused;
     };
@@ -59,7 +82,7 @@ function Ball(id, x, y, color) {
     };
 
     self.isCollidingWithPaddle = (player1, player2) => {
-        // TODO fix == sign since the ball speed may cause pixels to be skipped, implement a buffer.
+        // What happens when the ball is moving so fast that it skips over the paddle?
         if (
             self.y >= player2.y &&
             self.y <= HEIGHT &&
