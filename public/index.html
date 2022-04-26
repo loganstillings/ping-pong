@@ -3,7 +3,7 @@
     <head>
         <title>Ping Pong Game</title>
     </head>
-    <body>
+    <body style="margin: 0px">
         <canvas
             id="canvas"
             width="800"
@@ -34,10 +34,24 @@
             const BALL_START_Y =
                 Math.floor(HEIGHT / 2) - Math.floor(BALL_HEIGHT / 2);
 
-            var ballSpeedX = 1;
-            var ballSpeedY = 1;
-
             var paused = true;
+
+            let resizeCanvas = function () {
+                CANVAS_WIDTH = window.innerWidth - 10;
+                CANVAS_HEIGHT = window.innerHeight - 10;
+
+                canvas.width = WIDTH;
+                canvas.height = HEIGHT;
+
+                canvas.style.width = "" + CANVAS_WIDTH + "px";
+                canvas.style.height = "" + CANVAS_HEIGHT + "px";
+            };
+
+            resizeCanvas();
+
+            window.addEventListener("resize", function () {
+                resizeCanvas();
+            });
 
             app.onInit = function () {
                 var player1 = new Player("player1", PADDLE_START_X, 0, "red");
