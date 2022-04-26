@@ -14,43 +14,68 @@
         <script type="text/javascript">
             var canvas = document.getElementById("canvas");
             var ctx = canvas.getContext("2d");
+
             const HEIGHT = canvas.height;
             const WIDTH = canvas.width;
-            const PADDLE_WIDTH = 200;
-            const PADDLE_HEIGHT = 20;
+
+            const PADDLE_WIDTH = WIDTH / 4;
+            const PADDLE_HEIGHT = HEIGHT / 20;
             const PADDLE_SPEED = 5;
             // Both players paddles start in the middle horizontally
             const PADDLE_START_X =
                 Math.floor(WIDTH / 2) - Math.floor(PADDLE_WIDTH / 2);
 
-            var player1 = {};
-            var player2 = {};
+            const BALL_WIDTH = WIDTH / 80;
+            const BALL_HEIGHT = HEIGHT / 40;
+            const BALL_START_X =
+                Math.floor(WIDTH / 2) - Math.floor(BALL_WIDTH / 2);
+            const BALL_START_Y =
+                Math.floor(HEIGHT / 2) - Math.floor(BALL_HEIGHT / 2);
+
+            var ballSpeedX = 1;
+            var ballSpeedY = 1;
+
+            var player1 = {
+                points: 0,
+                isPressingLeft: false,
+                isPressingRight: false,
+                isPressingDown: false,
+                isPressingUp: false,
+            };
+            var player2 = {
+                points: 0,
+                isPressingLeft: false,
+                isPressingRight: false,
+                isPressingDown: false,
+                isPressingUp: false,
+            };
+            var paused = true;
 
             document.onkeydown = function (event) {
                 if (event.keyCode === 68)
                     //d
-                    player1.pressingRight = true;
+                    player1.isPressingRight = true;
                 else if (event.keyCode === 83)
                     //s
-                    player1.pressingDown = true;
+                    player1.isPressingDown = true;
                 else if (event.keyCode === 65)
                     //a
-                    player1.pressingLeft = true;
+                    player1.isPressingLeft = true;
                 else if (event.keyCode === 87)
                     // w
-                    player1.pressingUp = true;
+                    player1.isPressingUp = true;
                 else if (event.keyCode === 39) {
                     // right
-                    player2.pressingRight = true;
+                    player2.isPressingRight = true;
                 } else if (event.keyCode === 40)
                     //down
-                    player2.pressingDown = true;
+                    player2.isPressingDown = true;
                 else if (event.keyCode === 37)
                     //left
-                    player2.pressingLeft = true;
+                    player2.isPressingLeft = true;
                 else if (event.keyCode === 38)
                     //up
-                    player2.pressingUp = true;
+                    player2.isPressingUp = true;
                 else if (event.keyCode === 32)
                     // spacebar
                     paused = !paused;
@@ -59,79 +84,157 @@
             document.onkeyup = function (event) {
                 if (event.keyCode === 68)
                     //d
-                    player1.pressingRight = false;
+                    player1.isPressingRight = false;
                 else if (event.keyCode === 83)
                     //s
-                    player1.pressingDown = false;
+                    player1.isPressingDown = false;
                 else if (event.keyCode === 65)
                     //a
-                    player1.pressingLeft = false;
+                    player1.isPressingLeft = false;
                 else if (event.keyCode === 87)
                     // w
-                    player1.pressingUp = false;
+                    player1.isPressingUp = false;
                 else if (event.keyCode === 39)
                     //right
-                    player2.pressingRight = false;
+                    player2.isPressingRight = false;
                 else if (event.keyCode === 40)
                     //down
-                    player2.pressingDown = false;
+                    player2.isPressingDown = false;
                 else if (event.keyCode === 37)
                     //left
-                    player2.pressingLeft = false;
+                    player2.isPressingLeft = false;
                 else if (event.keyCode === 38)
                     //up
-                    player2.pressingUp = false;
+                    player2.isPressingUp = false;
             };
 
-            function Node(id, x, y, width, height, color, direction) {
+            function Node(id, x, y, width, height, color) {
                 this.id = id;
                 this.x = x;
                 this.y = y;
                 this.width = width;
                 this.height = height;
                 this.color = color;
-                this.direction = direction;
             }
 
             app.onInit = function () {
                 this.nodes.push(
                     new Node(
-                        "red-box",
+                        "player1",
                         PADDLE_START_X,
                         0,
                         PADDLE_WIDTH,
                         PADDLE_HEIGHT,
-                        "red",
-                        0
+                        "red"
                     )
                 );
                 this.nodes.push(
                     new Node(
-                        "blue-box",
+                        "player2",
                         PADDLE_START_X,
                         HEIGHT - PADDLE_HEIGHT,
                         PADDLE_WIDTH,
                         PADDLE_HEIGHT,
-                        "blue",
-                        0
+                        "blue"
+                    )
+                );
+                this.nodes.push(
+                    new Node(
+                        "ball",
+                        BALL_START_X,
+                        BALL_START_Y,
+                        BALL_WIDTH,
+                        BALL_HEIGHT,
+                        "black"
                     )
                 );
             };
 
             app.onUpdate = function (time) {
-                var redbox = this.getNode("red-box");
-                var bluebox = this.getNode("blue-box");
+                if (paused) {
+                    return;
+                }
+                var redBox = this.getNode("player1");
+                var blueBox = this.getNode("player2");
+                var blackBall = this.getNode("ball");
 
-                if (player1.pressingRight && redbox.x < WIDTH - PADDLE_WIDTH) {
-                    redbox.x += PADDLE_SPEED;
-                } else if (player1.pressingLeft && redbox.x > 0) {
-                    redbox.x -= PADDLE_SPEED;
+                var updateBallLocation = function () {
+                    blackBall.x += ballSpeedX;
+                    blackBall.y += ballSpeedY;
+                };
+
+                var isCollidingWithPaddle = function (ball) {
+                    if (
+                        ball.y === blueBox.y &&
+                        ball.x >= blueBox.x &&
+                        ball.x <= blueBox.x + blueBox.width
+                    ) {
+                        return true;
+                    }
+                    if (
+                        ball.y === redBox.y + redBox.height &&
+                        ball.x >= redBox.x &&
+                        ball.x <= redBox.x + redBox.width
+                    ) {
+                        return true;
+                    }
+                    return false;
+                };
+
+                var isCollidingWithWall = function (ball) {
+                    if (ball.x === 0 || ball.x === WIDTH - BALL_WIDTH) {
+                        return true;
+                    }
+                    return false;
+                };
+
+                var isScored = function (ball) {
+                    if (ball.y === 0) {
+                        player2.points++;
+                        return true;
+                    } else if (ball.y === HEIGHT - BALL_HEIGHT) {
+                        player1.points++;
+                        return true;
+                    }
+                    return false;
+                };
+
+                updateBallLocation();
+
+                if (isCollidingWithWall(blackBall)) {
+                    // ball bounce logic
+                    ballSpeedX *= -1;
+                }
+                if (isCollidingWithPaddle(blackBall)) {
+                    // ball return logic
+                    ballSpeedY *= -1;
+                    ballSpeedY += ballSpeedY < 0 ? -0.5 : 0.5;
+                    ballSpeedX += ballSpeedX < 0 ? -0.5 : 0.5;
+                }
+                if (isScored(blackBall)) {
+                    // points logic
+                    ballSpeedX = 0;
+                    ballSpeedY = 0;
+                    paused = true;
+                    var score = `Score: player1(red) - ${player1.points}, player2(blue) - ${player2.points}`;
+                    console.log(score);
+                }
+                if (
+                    player1.isPressingRight &&
+                    redBox.x < WIDTH - PADDLE_WIDTH
+                ) {
+                    redBox.x += PADDLE_SPEED;
+                } else if (player1.isPressingLeft && redBox.x > 0) {
+                    redBox.x -= PADDLE_SPEED;
                 }
 
-                if (player2.pressingRight && bluebox.x < WIDTH - PADDLE_WIDTH) {
-                    bluebox.x += PADDLE_SPEED;
-                } else if (player2.pressingLeft && bluebox.x > 0) {
-                    bluebox.x -= PADDLE_SPEED;
+                if (
+                    player2.isPressingRight &&
+                    blueBox.x < WIDTH - PADDLE_WIDTH
+                ) {
+                    blueBox.x += PADDLE_SPEED;
+                } else if (player2.isPressingLeft && blueBox.x > 0) {
+                    blueBox.x -= PADDLE_SPEED;
                 }
             };
         </script>
