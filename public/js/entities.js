@@ -53,7 +53,7 @@ function Ball(id, x, y, color) {
         if (self.isCollidingWithPaddle(player1, player2)) {
             self.speedY *= -1;
             if (self.speedY > -15 && self.speedY < 15) {
-                // capping the vertical speed at 15 so it doesn't skip the paddle
+                // capping the vertical speed at 15 so it doesn't skip the paddle. TODO: make this dynamic as well
                 self.speedY += self.speedY < 0 ? -0.5 : 0.5;
             }
             self.speedX += self.speedX < 0 ? -0.5 : 0.5;
@@ -74,7 +74,6 @@ function Ball(id, x, y, color) {
             player1.reset();
             player2.reset();
         }
-        return paused;
     };
 
     self.isCollidingWithWall = () => {

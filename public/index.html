@@ -99,7 +99,7 @@
                         player2.isPressingUp = true;
                     else if (event.keyCode === 32)
                         // spacebar
-                        paused = !paused;
+                        app.pause();
                 };
 
                 document.onkeyup = function (event) {
@@ -142,6 +142,28 @@
                 ball.update(player1, player2);
                 player1.update();
                 player2.update();
+            };
+
+            app.pause = function () {
+                paused = !paused;
+            };
+
+            app.reset = function () {
+                var player1 = this.getNode("player1");
+                var player2 = this.getNode("player2");
+                var ball = this.getNode("ball");
+                player1.reset();
+                player2.reset();
+                ball.initialize();
+            };
+
+            app.start = function () {
+                // Same as reset but resets the score
+                var player1 = this.getNode("player1");
+                var player2 = this.getNode("player2");
+                player1.points = 0;
+                player2.points = 0;
+                app.reset();
             };
         </script>
     </body>
