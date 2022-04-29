@@ -7,8 +7,8 @@ function Node(id, x, y, width, height, color) {
     this.color = color;
     return this;
 }
-function Player(id, x, y, color) {
-    var self = new Node(id, x, y, PADDLE_WIDTH, PADDLE_HEIGHT, color);
+function Player(id, x, y, paddleWidth, paddleHeight, appWidth, color) {
+    var self = new Node(id, x, y, paddleWidth, paddleHeight, color);
     self.points = 0;
     self.isPressingLeft = false;
     self.isPressingRight = false;
@@ -16,7 +16,7 @@ function Player(id, x, y, color) {
     self.isPressingUp = false;
 
     self.update = () => {
-        if (self.isPressingRight && self.x < WIDTH - PADDLE_WIDTH) {
+        if (self.isPressingRight && self.x < appWidth - paddleWidth) {
             self.x += PADDLE_SPEED;
         } else if (self.isPressingLeft && self.x > 0) {
             self.x -= PADDLE_SPEED;
@@ -30,8 +30,8 @@ function Player(id, x, y, color) {
 
     return self;
 }
-function Ball(id, x, y, color) {
-    var self = new Node(id, x, y, BALL_WIDTH, BALL_HEIGHT, color);
+function Ball(id, x, y, ballWidth, ballHeight, appWidth, appHeight, color) {
+    var self = new Node(id, x, y, ballWidth, ballHeight, color);
 
     self.initialize = () => {
         self.speedX = 1;
@@ -77,14 +77,14 @@ function Ball(id, x, y, color) {
     };
 
     self.isCollidingWithWall = () => {
-        return self.x <= 0 || self.x >= WIDTH - BALL_WIDTH;
+        return self.x <= 0 || self.x >= appWidth - ballWidth;
     };
 
     self.isCollidingWithPaddle = (player1, player2) => {
         // What happens when the ball is moving so fast that it skips over the paddle?
         if (
             self.y >= player2.y &&
-            self.y <= HEIGHT &&
+            self.y <= appHeight &&
             self.x >= player2.x &&
             self.x <= player2.x + player2.width
         ) {
@@ -102,7 +102,7 @@ function Ball(id, x, y, color) {
     };
 
     self.isScored = () => {
-        return self.y <= 0 || self.y >= HEIGHT - BALL_HEIGHT;
+        return self.y <= 0 || self.y >= appHeight - ballHeight;
     };
 
     return self;
