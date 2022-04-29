@@ -16,23 +16,25 @@
             var canvas = document.getElementById("canvas");
             var ctx = canvas.getContext("2d");
 
-            const HEIGHT = canvas.height;
-            const WIDTH = canvas.width;
+            const APP_HEIGHT = canvas.height;
+            const APP_WIDTH = canvas.width;
 
-            const PADDLE_WIDTH = WIDTH / 4;
-            const PADDLE_HEIGHT = HEIGHT / 20;
+            const PADDLE_WIDTH = APP_WIDTH / 32;
+            const PADDLE_HEIGHT = APP_HEIGHT / 4;
             const PADDLE_SPEED = 5;
-            // Both players paddles start in the middle horizontally
-            const PADDLE_START_X =
-                Math.floor(WIDTH / 2) - Math.floor(PADDLE_WIDTH / 2);
+            // Both players paddles start in the middle vertically
+            const PADDLE_START_Y =
+                Math.floor(APP_HEIGHT / 2) - Math.floor(PADDLE_HEIGHT / 2);
 
             // Ball is one 80th of the width and one 40th of the height, in the case of 800x400 sized canvas the ball will be a 10 x 10 square
-            const BALL_WIDTH = WIDTH / 80;
-            const BALL_HEIGHT = HEIGHT / 40;
+            const BALL_WIDTH = APP_WIDTH / 80;
+            const BALL_HEIGHT = APP_HEIGHT / 40;
+
+            // Ball starts in the middle
             const BALL_START_X =
-                Math.floor(WIDTH / 2) - Math.floor(BALL_WIDTH / 2);
+                Math.floor(APP_WIDTH / 2) - Math.floor(BALL_WIDTH / 2);
             const BALL_START_Y =
-                Math.floor(HEIGHT / 2) - Math.floor(BALL_HEIGHT / 2);
+                Math.floor(APP_HEIGHT / 2) - Math.floor(BALL_HEIGHT / 2);
 
             var paused = true;
 
@@ -40,8 +42,8 @@
                 CANVAS_WIDTH = window.innerWidth - 10;
                 CANVAS_HEIGHT = window.innerHeight - 10;
 
-                canvas.width = WIDTH;
-                canvas.height = HEIGHT;
+                canvas.width = APP_WIDTH;
+                canvas.height = APP_HEIGHT;
 
                 canvas.style.width = "" + CANVAS_WIDTH + "px";
                 canvas.style.height = "" + CANVAS_HEIGHT + "px";
@@ -56,20 +58,20 @@
             app.onInit = function () {
                 var player1 = new Player(
                     "player1",
-                    PADDLE_START_X,
                     0,
+                    PADDLE_START_Y,
                     PADDLE_WIDTH,
                     PADDLE_HEIGHT,
-                    WIDTH,
+                    APP_HEIGHT,
                     "red"
                 );
                 var player2 = new Player(
                     "player2",
-                    PADDLE_START_X,
-                    HEIGHT - PADDLE_HEIGHT,
+                    APP_WIDTH - PADDLE_WIDTH,
+                    PADDLE_START_Y,
                     PADDLE_WIDTH,
                     PADDLE_HEIGHT,
-                    WIDTH,
+                    APP_HEIGHT,
                     "blue"
                 );
                 var ball = new Ball(
@@ -78,8 +80,8 @@
                     BALL_START_Y,
                     BALL_WIDTH,
                     BALL_HEIGHT,
-                    WIDTH,
-                    HEIGHT,
+                    APP_WIDTH,
+                    APP_HEIGHT,
                     "black"
                 );
 
@@ -88,27 +90,15 @@
                 this.nodes.push(ball);
 
                 document.onkeydown = function (event) {
-                    if (event.keyCode === 68)
-                        //d
-                        player1.isPressingRight = true;
-                    else if (event.keyCode === 83)
+                    if (event.keyCode === 83)
                         //s
                         player1.isPressingDown = true;
-                    else if (event.keyCode === 65)
-                        //a
-                        player1.isPressingLeft = true;
                     else if (event.keyCode === 87)
                         // w
                         player1.isPressingUp = true;
-                    else if (event.keyCode === 39) {
-                        // right
-                        player2.isPressingRight = true;
-                    } else if (event.keyCode === 40)
+                    else if (event.keyCode === 40)
                         //down
                         player2.isPressingDown = true;
-                    else if (event.keyCode === 37)
-                        //left
-                        player2.isPressingLeft = true;
                     else if (event.keyCode === 38)
                         //up
                         player2.isPressingUp = true;
@@ -118,27 +108,15 @@
                 };
 
                 document.onkeyup = function (event) {
-                    if (event.keyCode === 68)
-                        //d
-                        player1.isPressingRight = false;
-                    else if (event.keyCode === 83)
+                    if (event.keyCode === 83)
                         //s
                         player1.isPressingDown = false;
-                    else if (event.keyCode === 65)
-                        //a
-                        player1.isPressingLeft = false;
                     else if (event.keyCode === 87)
                         // w
                         player1.isPressingUp = false;
-                    else if (event.keyCode === 39)
-                        //right
-                        player2.isPressingRight = false;
                     else if (event.keyCode === 40)
                         //down
                         player2.isPressingDown = false;
-                    else if (event.keyCode === 37)
-                        //left
-                        player2.isPressingLeft = false;
                     else if (event.keyCode === 38)
                         //up
                         player2.isPressingUp = false;
