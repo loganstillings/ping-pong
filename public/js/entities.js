@@ -83,8 +83,8 @@ function Ball(
         if (self.isCollidingWithPaddle(player1, player2)) {
             // bounce ball off paddle, increase speed
             self.speedX *= -1;
-            if (self.speedX > -15 && self.speedX < 15) {
-                // capping the horizontal speed at 15 so it doesn't skip the paddle. TODO: make this dynamic as well
+            if (self.speedX > -player1.width && self.speedX < player1.width) {
+                // capping the horizontal speed at paddle width so it doesn't skip the paddle
                 self.speedX += self.speedX < 0 ? -1 : 1;
             }
             self.speedY += self.speedY < 0 ? -1 : 1;
@@ -112,24 +112,26 @@ function Ball(
     };
 
     self.isCollidingWithPaddle = (player1, player2) => {
-        // What happens when the ball is moving so fast that it skips over the paddle?
         if (
-            self.x >= player2.x - ballWidth &&
-            self.x <= appWidth - ballWidth &&
-            self.y >= player2.y &&
-            self.y <= player2.y + player2.height
-        ) {
-            return true;
-        }
-        if (
+            // colliding with player1
             self.x <= player1.x + player1.width &&
             self.x >= 0 &&
             self.y >= player1.y &&
-            self.y <= player1.y + player1.height
+            self.y <= player1.y + player1.height &&
+            self.speedX < 0
         ) {
             return true;
         }
-        // TODO: add if for ball hitting top of paddle
+        if (
+            // colliding with player2
+            self.x >= player2.x - ballWidth &&
+            self.x <= appWidth - ballWidth &&
+            self.y >= player2.y &&
+            self.y <= player2.y + player2.height &&
+            self.speedX > 0
+        ) {
+            return true;
+        }
         return false;
     };
 
