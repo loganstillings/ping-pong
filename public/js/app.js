@@ -39,7 +39,26 @@ var app = {
             var node = this.nodes[index];
 
             this.context.fillStyle = node.color;
-            this.context.fillRect(node.x, node.y, node.width, node.height);
+            if (node.id === "ball") {
+                // treat width as ball diameter
+                var radius = node.width / 2;
+                var centerX = node.x + Math.floor(node.width / 2);
+                var centerY = node.y + Math.floor(node.height / 2);
+                this.context.beginPath();
+                this.context.arc(
+                    centerX,
+                    centerY,
+                    radius,
+                    0,
+                    2 * Math.PI,
+                    false
+                );
+                this.context.fill();
+                this.context.lineWidth = 5;
+                this.context.stroke();
+            } else {
+                this.context.fillRect(node.x, node.y, node.width, node.height);
+            }
         }
 
         this.lastUpdate = Date.now();
