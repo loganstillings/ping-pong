@@ -81,13 +81,22 @@ function Ball(
         }
 
         if (self.isCollidingWithPaddle(player1, player2)) {
+            // calculate where on the paddle the ball is hitting to return ball at an angle
+            var ballMidpointY = self.y + self.height / 2;
+            var paddleMidpointY =
+                self.speedX < 0
+                    ? player1.y + player1.height / 2
+                    : player2.y + player2.height / 2;
+            // normalize y speed on range -5 to 5 based on ball location on paddle
+            self.speedY =
+                -1 * Math.floor((paddleMidpointY - ballMidpointY) / 20);
+
             // bounce ball off paddle, increase speed
             self.speedX *= -1;
             if (self.speedX > -player1.width && self.speedX < player1.width) {
                 // capping the horizontal speed at paddle width so it doesn't skip the paddle
                 self.speedX += self.speedX < 0 ? -1 : 1;
             }
-            self.speedY += self.speedY < 0 ? -1 : 1;
         }
 
         if (self.isScored()) {
