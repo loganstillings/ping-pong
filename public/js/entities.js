@@ -7,7 +7,16 @@ function Node(id, x, y, width, height, color) {
     this.color = color;
     return this;
 }
-function Player(id, x, y, paddleWidth, paddleHeight, appHeight, color) {
+function Player(
+    id,
+    x,
+    y,
+    paddleWidth,
+    paddleHeight,
+    paddleSpeed,
+    appHeight,
+    color
+) {
     var self = new Node(id, x, y, paddleWidth, paddleHeight, color);
     self.points = 0;
     self.isPressingDown = false;
@@ -16,17 +25,17 @@ function Player(id, x, y, paddleWidth, paddleHeight, appHeight, color) {
     self.update = () => {
         if (self.isPressingDown && self.y < appHeight - paddleHeight) {
             // move paddle up
-            if (self.y + PADDLE_SPEED > appHeight - paddleHeight) {
+            if (self.y + paddleSpeed > appHeight - paddleHeight) {
                 self.y = appHeight - paddleHeight;
             } else {
-                self.y += PADDLE_SPEED;
+                self.y += paddleSpeed;
             }
         } else if (self.isPressingUp && self.y > 0) {
             // move paddle down
-            if (self.y - PADDLE_SPEED < 0) {
+            if (self.y - paddleSpeed < 0) {
                 self.y = 0;
             } else {
-                self.y -= PADDLE_SPEED;
+                self.y -= paddleSpeed;
             }
         }
     };
@@ -38,13 +47,24 @@ function Player(id, x, y, paddleWidth, paddleHeight, appHeight, color) {
 
     return self;
 }
-function Ball(id, x, y, ballWidth, ballHeight, appWidth, appHeight, color) {
+function Ball(
+    id,
+    x,
+    y,
+    ballWidth,
+    ballHeight,
+    startSpeed,
+    appWidth,
+    appHeight,
+    color
+) {
     var self = new Node(id, x, y, ballWidth, ballHeight, color);
 
     self.initialize = () => {
-        // TODO randomize speed directions
-        self.speedX = 3;
-        self.speedY = 1;
+        var verticalDirection = Math.random() < 0.5 ? -1 : 1;
+        var horizontalDirection = Math.random() < 0.5 ? -1 : 1;
+        self.speedX = startSpeed * horizontalDirection;
+        self.speedY = startSpeed * verticalDirection;
         self.x = x;
         self.y = y;
     };
@@ -56,16 +76,18 @@ function Ball(id, x, y, ballWidth, ballHeight, appWidth, appHeight, color) {
         self.y += self.speedY;
 
         if (self.isCollidingWithWall()) {
+            // bounce ball off wall
             self.speedY *= -1;
         }
 
         if (self.isCollidingWithPaddle(player1, player2)) {
+            // bounce ball off paddle, increase speed
             self.speedX *= -1;
             if (self.speedX > -15 && self.speedX < 15) {
                 // capping the horizontal speed at 15 so it doesn't skip the paddle. TODO: make this dynamic as well
-                self.speedX += self.speedX < 0 ? -0.5 : 0.5;
+                self.speedX += self.speedX < 0 ? -1 : 1;
             }
-            self.speedY += self.speedY < 0 ? -0.5 : 0.5;
+            self.speedY += self.speedY < 0 ? -1 : 1;
         }
 
         if (self.isScored()) {
@@ -92,8 +114,8 @@ function Ball(id, x, y, ballWidth, ballHeight, appWidth, appHeight, color) {
     self.isCollidingWithPaddle = (player1, player2) => {
         // What happens when the ball is moving so fast that it skips over the paddle?
         if (
-            self.x >= player2.x &&
-            self.x <= appWidth &&
+            self.x >= player2.x - ballWidth &&
+            self.x <= appWidth - ballWidth &&
             self.y >= player2.y &&
             self.y <= player2.y + player2.height
         ) {
@@ -107,6 +129,7 @@ function Ball(id, x, y, ballWidth, ballHeight, appWidth, appHeight, color) {
         ) {
             return true;
         }
+        // TODO: add if for ball hitting top of paddle
         return false;
     };
 
