@@ -83,7 +83,8 @@ var app = {
         var positionY = this.canvas.height / 10;
         var player1PointsPositionX = this.canvas.width / 4;
         var player2PointsPositionX = this.canvas.width - player1PointsPositionX;
-        this.context.font = "48px serif";
+        this.context.font = "48px verdana, sans-serif";
+        this.context.fillStyle = "rgba(135, 135, 135, 0.5)";
         this.context.fillText(player1Points, player1PointsPositionX, positionY);
         this.context.fillText(player2Points, player2PointsPositionX, positionY);
     },
