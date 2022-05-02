@@ -24,19 +24,25 @@ function Player(
 
     self.update = () => {
         if (self.isPressingDown && self.y < appHeight - paddleHeight) {
-            // move paddle up
-            if (self.y + paddleSpeed > appHeight - paddleHeight) {
-                self.y = appHeight - paddleHeight;
-            } else {
-                self.y += paddleSpeed;
-            }
+            self.moveDown();
         } else if (self.isPressingUp && self.y > 0) {
-            // move paddle down
-            if (self.y - paddleSpeed < 0) {
-                self.y = 0;
-            } else {
-                self.y -= paddleSpeed;
-            }
+            self.moveUp();
+        }
+    };
+
+    self.moveDown = () => {
+        if (self.y + paddleSpeed > appHeight - paddleHeight) {
+            self.y = appHeight - paddleHeight;
+        } else {
+            self.y += paddleSpeed;
+        }
+    };
+
+    self.moveUp = () => {
+        if (self.y - paddleSpeed < 0) {
+            self.y = 0;
+        } else {
+            self.y -= paddleSpeed;
         }
     };
 
@@ -81,35 +87,11 @@ function Ball(
         }
 
         if (self.isCollidingWithPaddle(player1, player2)) {
-            // calculate where on the paddle the ball is hitting to return ball at an angle
-            var ballMidpointY = self.y + self.height / 2;
-            var paddleMidpointY =
-                self.speedX < 0
-                    ? player1.y + player1.height / 2
-                    : player2.y + player2.height / 2;
-            // normalize y speed on range -5 to 5 based on ball location on paddle
-            self.speedY =
-                -1 * Math.floor((paddleMidpointY - ballMidpointY) / 20);
-
-            // bounce ball off paddle, increase speed
-            self.speedX *= -1;
-            if (self.speedX > -player1.width && self.speedX < player1.width) {
-                // capping the horizontal speed at paddle width so it doesn't skip the paddle
-                self.speedX += self.speedX < 0 ? -1 : 1;
-            }
+            self.returnBall(player1, player2);
         }
 
         if (self.isScored()) {
-            self.speedX = 0;
-            self.speedY = 0;
-            paused = true;
-            if (self.x <= 0) {
-                player2.points++;
-            } else {
-                player1.points++;
-            }
-            var score = `Score: Red - ${player1.points}, Blue - ${player2.points}`;
-            console.log(score);
+            self.scorePoints(player1, player2);
             self.initialize();
             player1.reset();
             player2.reset();
@@ -121,31 +103,55 @@ function Ball(
     };
 
     self.isCollidingWithPaddle = (player1, player2) => {
-        if (
+        return (
             // colliding with player1
-            self.x <= player1.x + player1.width &&
-            self.x >= 0 &&
-            self.y >= player1.y &&
-            self.y <= player1.y + player1.height &&
-            self.speedX < 0
-        ) {
-            return true;
-        }
-        if (
+            (self.x <= player1.x + player1.width &&
+                self.x >= 0 &&
+                self.y >= player1.y &&
+                self.y <= player1.y + player1.height &&
+                self.speedX < 0) ||
             // colliding with player2
-            self.x >= player2.x - ballWidth &&
-            self.x <= appWidth - ballWidth &&
-            self.y >= player2.y &&
-            self.y <= player2.y + player2.height &&
-            self.speedX > 0
-        ) {
-            return true;
-        }
-        return false;
+            (self.x >= player2.x - ballWidth &&
+                self.x <= appWidth - ballWidth &&
+                self.y >= player2.y &&
+                self.y <= player2.y + player2.height &&
+                self.speedX > 0)
+        );
     };
 
     self.isScored = () => {
         return self.x <= 0 || self.x >= appWidth - ballWidth;
+    };
+
+    self.returnBall = (player1, player2) => {
+        // calculate where on the paddle the ball is hitting to return ball at an angle
+        var ballMidpointY = self.y + self.height / 2;
+        var paddleMidpointY =
+            self.speedX < 0
+                ? player1.y + player1.height / 2
+                : player2.y + player2.height / 2;
+        // normalize y speed within a range based on ball location on paddle
+        self.speedY = -1 * Math.floor((paddleMidpointY - ballMidpointY) / 20);
+
+        // bounce ball off paddle, increase speed
+        self.speedX *= -1;
+        if (self.speedX > -player1.width && self.speedX < player1.width) {
+            // capping the horizontal speed at paddle width so it doesn't skip the paddle
+            self.speedX += self.speedX < 0 ? -1 : 1;
+        }
+    };
+
+    self.scorePoints = (player1, player2) => {
+        self.speedX = 0;
+        self.speedY = 0;
+        paused = true;
+        if (self.x <= 0) {
+            player2.points++;
+        } else {
+            player1.points++;
+        }
+        var score = `Score: Red - ${player1.points}, Blue - ${player2.points}`;
+        console.log(score);
     };
 
     return self;

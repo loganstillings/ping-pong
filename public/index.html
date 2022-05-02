@@ -55,7 +55,7 @@
                 resizeCanvas();
             });
 
-            app.onInit = function () {
+            var createNodes = function () {
                 var player1 = new Player(
                     "player1",
                     0,
@@ -88,10 +88,14 @@
                     "black"
                 );
 
-                this.nodes.push(player1);
-                this.nodes.push(player2);
-                this.nodes.push(ball);
+                app.nodes.push(player1);
+                app.nodes.push(player2);
+                app.nodes.push(ball);
+            };
 
+            var createKeyBindings = function () {
+                var player1 = app.getNode("player1");
+                var player2 = app.getNode("player2");
                 document.onkeydown = function (event) {
                     if (event.keyCode === 83)
                         //s
@@ -124,6 +128,11 @@
                         //up
                         player2.isPressingUp = false;
                 };
+            };
+
+            app.onInit = function () {
+                createNodes();
+                createKeyBindings();
             };
 
             app.onUpdate = function (time) {

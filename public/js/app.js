@@ -40,22 +40,7 @@ var app = {
 
             this.context.fillStyle = node.color;
             if (node.id === "ball") {
-                // treat width as ball diameter
-                var radius = node.width / 2;
-                var centerX = node.x + Math.floor(node.width / 2);
-                var centerY = node.y + Math.floor(node.height / 2);
-                this.context.beginPath();
-                this.context.arc(
-                    centerX,
-                    centerY,
-                    radius,
-                    0,
-                    2 * Math.PI,
-                    false
-                );
-                this.context.fill();
-                this.context.lineWidth = 5;
-                this.context.stroke();
+                this.drawBall(node);
             } else {
                 this.context.fillRect(node.x, node.y, node.width, node.height);
             }
@@ -87,6 +72,18 @@ var app = {
         this.context.fillStyle = "rgba(135, 135, 135, 0.5)";
         this.context.fillText(player1Points, player1PointsPositionX, positionY);
         this.context.fillText(player2Points, player2PointsPositionX, positionY);
+    },
+
+    drawBall: function (ballNode) {
+        // treat width as ball diameter
+        var radius = ballNode.width / 2;
+        var centerX = ballNode.x + Math.floor(ballNode.width / 2);
+        var centerY = ballNode.y + Math.floor(ballNode.height / 2);
+        this.context.beginPath();
+        this.context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        this.context.fill();
+        this.context.lineWidth = 5;
+        this.context.stroke();
     },
 
     //events
