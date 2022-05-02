@@ -21,9 +21,14 @@ function Player(
     self.points = 0;
     self.isPressingDown = false;
     self.isPressingUp = false;
+    self.isFrozen = false;
+    self.speedY = paddleSpeed;
 
     self.update = () => {
-        if (self.isPressingDown && self.y < appHeight - paddleHeight) {
+        if (self.isFrozen) {
+            return;
+        }
+        if (self.isPressingDown && self.y < appHeight - self.height) {
             self.moveDown();
         } else if (self.isPressingUp && self.y > 0) {
             self.moveUp();
@@ -31,24 +36,44 @@ function Player(
     };
 
     self.moveDown = () => {
-        if (self.y + paddleSpeed > appHeight - paddleHeight) {
-            self.y = appHeight - paddleHeight;
+        if (self.y + self.speedY > appHeight - self.height) {
+            self.y = appHeight - self.height;
         } else {
-            self.y += paddleSpeed;
+            self.y += self.speedY;
         }
     };
 
     self.moveUp = () => {
-        if (self.y - paddleSpeed < 0) {
+        if (self.y - self.speedY < 0) {
             self.y = 0;
         } else {
-            self.y -= paddleSpeed;
+            self.y -= self.speedY;
         }
+    };
+
+    self.freeze = () => {
+        // temporarily freeze paddle movement for 1 second
+        self.isFrozen = true;
+        setTimeout(() => {
+            self.isFrozen = false;
+        }, 1000);
+    };
+
+    self.grow = () => {
+        self.height += 20;
+        // TODO center paddle on growth
+    };
+
+    self.boostSpeed = () => {
+        self.speedY += 5;
     };
 
     self.reset = () => {
         self.x = x;
         self.y = y;
+        self.isFrozen = false;
+        self.speedY = paddleSpeed;
+        self.height = paddleHeight;
     };
 
     return self;
@@ -78,9 +103,6 @@ function Ball(
     self.initialize();
 
     self.update = (player1, player2) => {
-        self.x += self.speedX;
-        self.y += self.speedY;
-
         if (self.isCollidingWithWall()) {
             // bounce ball off wall
             self.speedY *= -1;
@@ -96,13 +118,16 @@ function Ball(
             player1.reset();
             player2.reset();
         }
+        self.x += self.speedX;
+        self.y += self.speedY;
     };
 
     self.isCollidingWithWall = () => {
-        return self.y <= 0 || self.y >= appHeight - ballHeight;
+        return self.y <= 0 || self.y >= appHeight - self.height;
     };
 
     self.isCollidingWithPaddle = (player1, player2) => {
+        // TODO re use this collision check for powerup and ball since it's the same logic
         return (
             // colliding with player1
             (self.x <= player1.x + player1.width &&
@@ -111,8 +136,8 @@ function Ball(
                 self.y <= player1.y + player1.height &&
                 self.speedX < 0) ||
             // colliding with player2
-            (self.x >= player2.x - ballWidth &&
-                self.x <= appWidth - ballWidth &&
+            (self.x >= player2.x - self.width &&
+                self.x <= appWidth - self.width &&
                 self.y >= player2.y &&
                 self.y <= player2.y + player2.height &&
                 self.speedX > 0)
@@ -152,7 +177,70 @@ function Ball(
         }
         var score = `Score: Red - ${player1.points}, Blue - ${player2.points}`;
         console.log(score);
+        // TODO erase powerups on score
     };
 
+    return self;
+}
+
+function PowerUp(id, x, y, width, height, type, speed, appWidth, color) {
+    // implementing a powerup entity that a player can grab if their paddle collides with it
+    var self = new Node(id, x, y, width, height, color);
+    self.speedX = speed;
+    self.type = type;
+
+    self.update = (player1, player2) => {
+        self.x += self.speedX;
+        if (self.isCollidingWithPaddle(player1, player2)) {
+            self.grantPowerUp(player1, player2);
+            self.delete();
+        }
+        if (self.hasPassedPaddle()) {
+            self.delete();
+        }
+    };
+
+    self.grantPowerUp = (player1, player2) => {
+        var poweredUpPlayer = self.speedX < 0 ? player1 : player2;
+        var opposingPlayer = self.speedX < 0 ? player2 : player1;
+        switch (self.type) {
+            case "freeze":
+                //freeze opposing player
+                opposingPlayer.freeze();
+                break;
+            case "boost":
+                // grant speed boost to powered up player
+                poweredUpPlayer.boostSpeed();
+                break;
+            case "growth":
+                poweredUpPlayer.grow();
+                break;
+            default:
+                break;
+        }
+    };
+
+    self.delete = () => {};
+
+    self.isCollidingWithPaddle = (player1, player2) => {
+        return (
+            // colliding with player1
+            (self.x <= player1.x + player1.width &&
+                self.x >= 0 &&
+                self.y >= player1.y &&
+                self.y <= player1.y + player1.height &&
+                self.speedX < 0) ||
+            // colliding with player2
+            (self.x >= player2.x - self.width &&
+                self.x <= appWidth - self.width &&
+                self.y >= player2.y &&
+                self.y <= player2.y + player2.height &&
+                self.speedX > 0)
+        );
+    };
+
+    self.hasPassedPaddle = () => {
+        return self.x <= 0 - self.width || self.x >= appWidth;
+    };
     return self;
 }
