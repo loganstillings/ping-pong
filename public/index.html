@@ -1,46 +1,251 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>Ping Pong Game</title>
-</head>
-<body>
-	<canvas id="canvas" width="800" height="400"></canvas>
-	<script type="text/javascript" src="js/app.js"></script>
-	<script type="text/javascript">
-		//Sample functions, remove these functions and design ping-pong game with onInit and onUpdate.
+    <head>
+        <title>Ping Pong Game</title>
+    </head>
+    <body style="margin: 0px">
+        <canvas
+            id="canvas"
+            width="800"
+            height="400"
+            style="border: 1px solid black"
+        ></canvas>
+        <script type="text/javascript" src="js/app.js"></script>
+        <script src="js/entities.js"></script>
+        <script type="text/javascript">
+            var canvas = document.getElementById("canvas");
 
-		app.onInit = function(){
-			this.nodes.push({
-				id : 'red-box',
-				x  : 100,
-				y  : 0,
-				width  : 100,
-				height : 100,
-				color  : 'red',
-				direction : 0
-			});
+            const APP_HEIGHT = canvas.height;
+            const APP_WIDTH = canvas.width;
 
-			this.nodes.push({
-				id : 'black-box',
-				x  : 50,
-				y  : 0,
-				width  : 150,
-				height : 150,
-				color  : 'black'
-			});
-		};
+            const PADDLE_WIDTH = APP_WIDTH / 32;
+            const PADDLE_HEIGHT = APP_HEIGHT / 4;
+            const PADDLE_SPEED = 5;
+            // Both players paddles start in the middle vertically
+            const PADDLE_START_Y =
+                Math.floor(APP_HEIGHT / 2) - Math.floor(PADDLE_HEIGHT / 2);
 
-		app.onUpdate = function(time){
-			this.getNode('black-box').y++;
+            // Ball is one 80th of the width and one 40th of the height, in the case of 800x400 sized canvas the ball will be a 10 x 10 square
+            const BALL_WIDTH = APP_WIDTH / 80;
+            const BALL_HEIGHT = APP_HEIGHT / 40;
 
-			if(Math.cos(this.timestamp / 100) > 0){
-				this.getNode('red-box').direction = -1;
-			}else{
-				this.getNode('red-box').direction = 1;
-			}
+            // Ball starts in the middle
+            const BALL_START_X =
+                Math.floor(APP_WIDTH / 2) - Math.floor(BALL_WIDTH / 2);
+            const BALL_START_Y =
+                Math.floor(APP_HEIGHT / 2) - Math.floor(BALL_HEIGHT / 2);
+            const BALL_START_SPEED = 1;
 
-			this.getNode('red-box').x+=this.getNode('red-box').direction;
-		};
-	</script>
-</body>
+            const POWERUP_TYPES = [
+                { name: "freeze", color: "cyan" },
+                { name: "boost", color: "orange" },
+                { name: "growth", color: "forestGreen" },
+            ];
+            const POWERUP_DIRECTION = Math.random() < 0 ? -1 : 1;
+            const POWERUP_VELOCITY = 5 * POWERUP_DIRECTION;
+            const POWERUP_INTERVAL = 5; // amount of time in seconds between powerUps
+            const POWERUP_HEIGHT = APP_HEIGHT / 60;
+            const POWERUP_WIDTH = APP_WIDTH / 120;
+
+            var paused = true;
+            var timer = 0;
+
+            let resizeCanvas = function () {
+                CANVAS_WIDTH = window.innerWidth - 10;
+                CANVAS_HEIGHT = window.innerHeight - 10;
+
+                canvas.width = APP_WIDTH;
+                canvas.height = APP_HEIGHT;
+
+                canvas.style.width = "" + CANVAS_WIDTH + "px";
+                canvas.style.height = "" + CANVAS_HEIGHT + "px";
+            };
+
+            resizeCanvas();
+
+            window.addEventListener("resize", function () {
+                resizeCanvas();
+            });
+
+            var createNodes = function () {
+                var player1 = new Player(
+                    "player1",
+                    0,
+                    PADDLE_START_Y,
+                    PADDLE_WIDTH,
+                    PADDLE_HEIGHT,
+                    PADDLE_SPEED,
+                    APP_HEIGHT,
+                    "red"
+                );
+                var player2 = new Player(
+                    "player2",
+                    APP_WIDTH - PADDLE_WIDTH,
+                    PADDLE_START_Y,
+                    PADDLE_WIDTH,
+                    PADDLE_HEIGHT,
+                    PADDLE_SPEED,
+                    APP_HEIGHT,
+                    "blue"
+                );
+                var ball = new Ball(
+                    "ball",
+                    BALL_START_X,
+                    BALL_START_Y,
+                    BALL_WIDTH,
+                    BALL_HEIGHT,
+                    BALL_START_SPEED,
+                    APP_WIDTH,
+                    APP_HEIGHT,
+                    "black"
+                );
+
+                app.nodes.push(player1);
+                app.nodes.push(player2);
+                app.nodes.push(ball);
+            };
+
+            var createKeyBindings = function () {
+                var player1 = app.getNode("player1");
+                var player2 = app.getNode("player2");
+                document.onkeydown = function (event) {
+                    if (event.keyCode === 83)
+                        //s
+                        player1.isPressingDown = true;
+                    else if (event.keyCode === 87)
+                        // w
+                        player1.isPressingUp = true;
+                    else if (event.keyCode === 40)
+                        //down
+                        player2.isPressingDown = true;
+                    else if (event.keyCode === 38)
+                        //up
+                        player2.isPressingUp = true;
+                    else if (event.keyCode === 32)
+                        // spacebar
+                        app.pause();
+                };
+
+                document.onkeyup = function (event) {
+                    if (event.keyCode === 83)
+                        //s
+                        player1.isPressingDown = false;
+                    else if (event.keyCode === 87)
+                        // w
+                        player1.isPressingUp = false;
+                    else if (event.keyCode === 40)
+                        //down
+                        player2.isPressingDown = false;
+                    else if (event.keyCode === 38)
+                        //up
+                        player2.isPressingUp = false;
+                };
+            };
+
+            app.onInit = function () {
+                createNodes();
+                createKeyBindings();
+            };
+
+            app.onUpdate = function (time) {
+                if (paused) {
+                    return;
+                }
+                var player1 = this.getNode("player1");
+                var player2 = this.getNode("player2");
+                var ball = this.getNode("ball");
+
+                ball.update(player1, player2);
+                player1.update();
+                player2.update();
+
+                timer += time;
+                var timerSeconds = Math.floor(timer / 1000);
+                var powerUpId = Math.floor(timerSeconds / POWERUP_INTERVAL);
+                var powerUp = this.getNode("powerUp" + powerUpId);
+                if (shouldCreatePowerUp(timerSeconds, powerUp)) {
+                    spawnPowerUp(powerUpId);
+                }
+                updatePowerUps(player1, player2);
+            };
+
+            var updatePowerUps = function (player1, player2) {
+                // depending on the powerUp interval constant, there could be multiple powerups to update
+                app.nodes
+                    .filter((node) => node.id.includes("powerUp"))
+                    .map((powerUp) => {
+                        powerUp.update(player1, player2);
+                    });
+            };
+
+            var shouldCreatePowerUp = function (timerSeconds, powerUp) {
+                return (
+                    timerSeconds > 0 &&
+                    timerSeconds % POWERUP_INTERVAL === 0 &&
+                    !powerUp.width // this determines whether or not the powerUp exists since getNode returns an object with null props when it can't find a node by its id
+                );
+            };
+
+            var spawnPowerUp = function (powerUpId) {
+                var powerUpIdString = `powerUp${powerUpId}`;
+                // always alternate powerUp direction per powerUp for fairness
+                var powerUpSpeed =
+                    powerUpId % 2 === 0
+                        ? POWERUP_VELOCITY * -1
+                        : POWERUP_VELOCITY;
+                var powerUpType =
+                    POWERUP_TYPES[
+                        Math.floor(Math.random() * POWERUP_TYPES.length)
+                    ];
+                var powerUpStartX = Math.floor(APP_WIDTH / 2);
+                var powerUpStartY = Math.floor(Math.random() * APP_HEIGHT);
+                var powerUp = new PowerUp(
+                    powerUpIdString,
+                    powerUpStartX,
+                    powerUpStartY,
+                    POWERUP_WIDTH,
+                    POWERUP_HEIGHT,
+                    powerUpType.name,
+                    powerUpSpeed,
+                    APP_WIDTH,
+                    powerUpType.color
+                );
+
+                app.nodes.push(powerUp);
+            };
+
+            var deletePowerUps = function () {
+                // if there are any powerups leftover after scoring they need to be deleted
+                app.nodes
+                    .filter((node) => node.id.includes("powerUp"))
+                    .map((powerUp) => {
+                        powerUp.delete();
+                    });
+            };
+
+            app.pause = function () {
+                paused = !paused;
+            };
+
+            app.reset = function () {
+                var player1 = this.getNode("player1");
+                var player2 = this.getNode("player2");
+                var ball = this.getNode("ball");
+                player1.reset();
+                player2.reset();
+                ball.initialize();
+                timer = 0;
+                deletePowerUps();
+            };
+
+            app.start = function () {
+                // Same as reset but resets the score
+                var player1 = this.getNode("player1");
+                var player2 = this.getNode("player2");
+                player1.points = 0;
+                player2.points = 0;
+                app.reset();
+            };
+        </script>
+    </body>
 </html>
