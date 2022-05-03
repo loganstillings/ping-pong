@@ -17,7 +17,11 @@ A basic ping pong game written with HTML and JavaScript.
 -   The ball bounces off walls and paddles. Vertical ball speed is calculated based on where the ball hits the paddle in relation to the paddle's center.
 -   Scoring is logged to the console as well as displayed on the game board.
 -   Ball is served in a random direction.
+-   The game uses 3 types of power-ups that the user can obtain by collecting with their paddle.
+    1. Growth (green) - this will increase the width of the paddle by 15% for the receiving player
+    2. Boost (orange) - this will increase the receiving player's paddle speed where each subsequent boost will be 2x, 3x, 4x... the original paddle speed
+    3. Freeze (light blue) - this will freeze the opposing player's paddle for 1 second.
 
 ## Demo
 
-[Video](https://recordit.co/4F6CDQnALO) (please note the video quality makes the game appear choppier than it really is)
+[Video](https://recordit.co/Ro0pKF3FIV) (please note the video quality makes the game appear choppier than it really is)

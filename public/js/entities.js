@@ -68,7 +68,7 @@ function Player(
     };
 
     self.boostSpeed = () => {
-        self.speedY += 5;
+        self.speedY += paddleSpeed; // each subsequent boost will be 2x, 3x, 4x... of the original paddle speed
     };
 
     self.reset = () => {
