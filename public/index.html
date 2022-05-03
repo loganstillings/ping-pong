@@ -44,11 +44,11 @@
             const POWERUP_DIRECTION = Math.random() < 0 ? -1 : 1;
             const POWERUP_VELOCITY = 5 * POWERUP_DIRECTION;
             const POWERUP_INTERVAL = 5; // amount of time in seconds between powerUps
-            // TODO: make these dynamic
-            const POWERUP_HEIGHT = 10;
-            const POWERUP_WIDTH = 10;
+            const POWERUP_HEIGHT = APP_HEIGHT / 60;
+            const POWERUP_WIDTH = APP_WIDTH / 120;
+
             var paused = true;
-            var roundTimer = 0;
+            var timer = 0;
 
             let resizeCanvas = function () {
                 CANVAS_WIDTH = window.innerWidth - 10;
@@ -151,7 +151,6 @@
                 if (paused) {
                     return;
                 }
-                roundTimer += time;
                 var player1 = this.getNode("player1");
                 var player2 = this.getNode("player2");
                 var ball = this.getNode("ball");
@@ -159,28 +158,37 @@
                 ball.update(player1, player2);
                 player1.update();
                 player2.update();
-                // TODO declutter
-                var roundTimerSeconds = Math.floor(roundTimer / 1000);
-                var powerUpId = Math.floor(roundTimerSeconds / 5);
+
+                timer += time;
+                var timerSeconds = Math.floor(timer / 1000);
+                var powerUpId = Math.floor(timerSeconds / POWERUP_INTERVAL);
                 var powerUp = this.getNode("powerUp" + powerUpId);
-                if (
-                    roundTimerSeconds > 0 &&
-                    roundTimerSeconds % 5 === 0 &&
-                    !powerUp.width // this determines wheter or not the powerUp exists since get null returns an object with null props when it can't find a node by its id
-                ) {
-                    // spawn random powerUp every 5 seconds;
+                if (shouldCreatePowerUp(timerSeconds, powerUp)) {
                     spawnPowerUp(powerUpId);
                 }
-                this.nodes
+                updatePowerUps(player1, player2);
+            };
+
+            var updatePowerUps = function (player1, player2) {
+                // depending on the powerUp interval constant, there could be multiple powerups to update
+                app.nodes
                     .filter((node) => node.id.includes("powerUp"))
                     .map((powerUp) => {
                         powerUp.update(player1, player2);
                     });
             };
 
+            var shouldCreatePowerUp = function (timerSeconds, powerUp) {
+                return (
+                    timerSeconds > 0 &&
+                    timerSeconds % POWERUP_INTERVAL === 0 &&
+                    !powerUp.width // this determines whether or not the powerUp exists since getNode returns an object with null props when it can't find a node by its id
+                );
+            };
+
             var spawnPowerUp = function (powerUpId) {
                 var powerUpIdString = `powerUp${powerUpId}`;
-                // alternate powerUp direction per powerUp
+                // always alternate powerUp direction per powerUp for fairness
                 var powerUpSpeed =
                     powerUpId % 2 === 0
                         ? POWERUP_VELOCITY * -1
@@ -203,14 +211,16 @@
                     powerUpType.color
                 );
 
-                // declare the delete method, which needs access to app.nodes;
-                powerUp.delete = () => {
-                    var indexToDelete = app.nodes.findIndex(
-                        (node) => node.id === powerUp.id
-                    );
-                    app.nodes.splice(indexToDelete, 1);
-                };
                 app.nodes.push(powerUp);
+            };
+
+            var deletePowerUps = function () {
+                // if there are any powerups leftover after scoring they need to be deleted
+                app.nodes
+                    .filter((node) => node.id.includes("powerUp"))
+                    .map((powerUp) => {
+                        powerUp.delete();
+                    });
             };
 
             app.pause = function () {
@@ -224,7 +234,8 @@
                 player1.reset();
                 player2.reset();
                 ball.initialize();
-                roundTimer = 0;
+                timer = 0;
+                deletePowerUps();
             };
 
             app.start = function () {

@@ -60,8 +60,11 @@ function Player(
     };
 
     self.grow = () => {
-        self.height += 20;
-        // TODO center paddle on growth
+        var growthAmount = Math.floor(self.height * 0.15); // Increase size by 15%
+        self.height += growthAmount;
+        if (self.y > growthAmount / 2) {
+            self.y -= growthAmount / 2;
+        }
     };
 
     self.boostSpeed = () => {
@@ -114,9 +117,7 @@ function Ball(
 
         if (self.isScored()) {
             self.scorePoints(player1, player2);
-            self.initialize();
-            player1.reset();
-            player2.reset();
+            app.reset();
         }
         self.x += self.speedX;
         self.y += self.speedY;
@@ -127,20 +128,11 @@ function Ball(
     };
 
     self.isCollidingWithPaddle = (player1, player2) => {
-        // TODO re use this collision check for powerup and ball since it's the same logic
         return (
             // colliding with player1
-            (self.x <= player1.x + player1.width &&
-                self.x >= 0 &&
-                self.y >= player1.y &&
-                self.y <= player1.y + player1.height &&
-                self.speedX < 0) ||
+            isCollidingWithEntity(self, player1) ||
             // colliding with player2
-            (self.x >= player2.x - self.width &&
-                self.x <= appWidth - self.width &&
-                self.y >= player2.y &&
-                self.y <= player2.y + player2.height &&
-                self.speedX > 0)
+            isCollidingWithEntity(self, player2)
         );
     };
 
@@ -177,7 +169,7 @@ function Ball(
         }
         var score = `Score: Red - ${player1.points}, Blue - ${player2.points}`;
         console.log(score);
-        // TODO erase powerups on score
+        app.reset();
     };
 
     return self;
@@ -213,6 +205,7 @@ function PowerUp(id, x, y, width, height, type, speed, appWidth, color) {
                 poweredUpPlayer.boostSpeed();
                 break;
             case "growth":
+                // increase paddle width of powered up player
                 poweredUpPlayer.grow();
                 break;
             default:
@@ -220,22 +213,17 @@ function PowerUp(id, x, y, width, height, type, speed, appWidth, color) {
         }
     };
 
-    self.delete = () => {};
+    self.delete = () => {
+        var indexToDelete = app.nodes.findIndex((node) => node.id === self.id);
+        app.nodes.splice(indexToDelete, 1);
+    };
 
     self.isCollidingWithPaddle = (player1, player2) => {
         return (
             // colliding with player1
-            (self.x <= player1.x + player1.width &&
-                self.x >= 0 &&
-                self.y >= player1.y &&
-                self.y <= player1.y + player1.height &&
-                self.speedX < 0) ||
+            isCollidingWithEntity(self, player1) ||
             // colliding with player2
-            (self.x >= player2.x - self.width &&
-                self.x <= appWidth - self.width &&
-                self.y >= player2.y &&
-                self.y <= player2.y + player2.height &&
-                self.speedX > 0)
+            isCollidingWithEntity(self, player2)
         );
     };
 
@@ -244,3 +232,12 @@ function PowerUp(id, x, y, width, height, type, speed, appWidth, color) {
     };
     return self;
 }
+
+isCollidingWithEntity = function (rect1, rect2) {
+    return (
+        rect1.x <= rect2.x + rect2.width &&
+        rect2.x <= rect1.x + rect1.width &&
+        rect1.y <= rect2.y + rect2.height &&
+        rect2.y <= rect1.y + rect1.height
+    );
+};
